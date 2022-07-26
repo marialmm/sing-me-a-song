@@ -39,3 +39,36 @@ describe("POST /recommendations tests", () => {
         expect(response.statusCode).toBe(409);
     });
 });
+
+describe("POST /recommendations/:id/upvote", () => {
+    it("Given a valid id, should return 200 and update the recommendation score", async () => {
+        const recommendationData =
+            recommendationsFactory.createRecommendationData();
+        await recommendationsFactory.insertRecommendation(recommendationData);
+
+        const initialRecommendationInfo =
+            await recommendationsFactory.getRecommendationInfo(
+                recommendationData.name
+            );
+
+        const response = await supertest(app).post(
+            `/recommendations/${initialRecommendationInfo.id}/upvote`
+        );
+
+        expect(response.statusCode).toEqual(200);
+
+        const finalRecommendationInfo =
+            await recommendationsFactory.getRecommendationInfo(
+                recommendationData.name
+            );
+
+        expect(finalRecommendationInfo.score).toBe(
+            initialRecommendationInfo.score + 1
+        );
+    });
+
+    it("Given a invalid id, should return 404", async () => {
+        const response = await supertest(app).post("/recommendations/1/upvote");
+        expect(response.statusCode).toBe(404);
+    });
+});
