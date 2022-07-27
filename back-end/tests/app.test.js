@@ -67,8 +67,68 @@ describe("POST /recommendations/:id/upvote", () => {
         );
     });
 
-    it("Given a invalid id, should return 404", async () => {
+    it("Given an invalid id, should return 404", async () => {
         const response = await supertest(app).post("/recommendations/1/upvote");
+        expect(response.statusCode).toBe(404);
+    });
+});
+
+describe("POST /recommendations/:id/downvote", () => {
+    it("Given a valid id, should return 200 and update the recommendation score", async () => {
+        const recommendationData =
+            recommendationsFactory.createRecommendationData();
+        await recommendationsFactory.insertRecommendation(recommendationData);
+
+        const initialRecommendationInfo =
+            await recommendationsFactory.getRecommendationInfo(
+                recommendationData.name
+            );
+
+        const response = await supertest(app).post(
+            `/recommendations/${initialRecommendationInfo.id}/downvote`
+        );
+
+        expect(response.statusCode).toBe(200);
+
+        const finalRecommendationInfo =
+            await recommendationsFactory.getRecommendationInfo(
+                recommendationData.name
+            );
+
+        expect(finalRecommendationInfo.score).toEqual(
+            initialRecommendationInfo.score - 1
+        );
+    });
+
+    it("If the score is less than -5, should return 200 and delete the recommendation", async () => {
+        const recommendationData =
+            recommendationsFactory.createRecommendationData();
+        recommendationData.score = -5;
+        await recommendationsFactory.insertRecommendation(recommendationData);
+
+        const initialRecommendationInfo =
+            await recommendationsFactory.getRecommendationInfo(
+                recommendationData.name
+            );
+
+        const response = await supertest(app).post(
+            `/recommendations/${initialRecommendationInfo.id}/downvote`
+        );
+
+        expect(response.statusCode).toBe(200);
+
+        const finalRecommendationInfo =
+            await recommendationsFactory.getRecommendationInfo(
+                recommendationData.name
+            );
+
+        expect(finalRecommendationInfo).toBeNull();
+    });
+
+    it("Given an invalid id, should return 404", async () => {
+        const response = await supertest(app).post(
+            "/recommendations/1/downvote"
+        );
         expect(response.statusCode).toBe(404);
     });
 });
