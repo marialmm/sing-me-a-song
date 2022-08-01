@@ -179,3 +179,19 @@ describe("Get a random recommendation tests", () => {
         expect(promise).rejects.toEqual({ type: "not_found", message: "" });
     });
 });
+
+describe("Get recommendations tests", () => {
+    it("Should return a list of recommendations", async () => {
+        const recommendation =
+            recommendationsFactory.createRecommendationData();
+        jest.spyOn(recommendationRepository, "findAll").mockResolvedValueOnce([
+            recommendation,
+        ]);
+
+        const response = await recommendationService.get();
+
+        expect(response).toEqual([recommendation]);
+        expect(recommendationRepository.findAll).toHaveBeenCalledTimes(1);
+    });
+});
+
