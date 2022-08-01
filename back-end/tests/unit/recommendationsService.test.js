@@ -118,3 +118,64 @@ describe("Downvote recommendation tests", () => {
         expect(recommendationRepository.updateScore).not.toHaveBeenCalled();
     });
 });
+
+describe("Get a random recommendation tests", () => {
+    it("Should return a random recommendation with a score greater than 10 ", async () => {
+        jest.spyOn(Math, "random").mockReturnValueOnce(0.6);
+
+        const recommendationData1 =
+            recommendationsFactory.createRecommendationData();
+        const recommendationData2 =
+            recommendationsFactory.createRecommendationData();
+
+        recommendationData1.score = 11;
+        recommendationData2.score = 5;
+
+        jest.spyOn(recommendationRepository, "findAll").mockImplementationOnce(
+            (filter) => {
+                const { score, scoreFilter } = filter;
+                if (scoreFilter === "gt") return [recommendationData1];
+                if (scoreFilter === "lte") return [recommendationData2];
+            }
+        );
+
+        const response = await recommendationService.getRandom();
+
+        expect(response).toEqual(recommendationData1);
+        expect(recommendationRepository.findAll).toHaveBeenCalledTimes(1);
+    });
+
+    it("Should return a recommendation with a score less than 10", async () => {
+        jest.spyOn(Math, "random").mockReturnValueOnce(0.8);
+
+        const recommendationData1 =
+            recommendationsFactory.createRecommendationData();
+        const recommendationData2 =
+            recommendationsFactory.createRecommendationData();
+
+        recommendationData1.score = 11;
+        recommendationData2.score = 5;
+
+        jest.spyOn(recommendationRepository, "findAll").mockImplementationOnce(
+            (filter) => {
+                const { score, scoreFilter } = filter;
+                if (scoreFilter === "gt") return [recommendationData1];
+                if (scoreFilter === "lte") return [recommendationData2];
+            }
+        );
+
+        const response = await recommendationService.getRandom();
+
+        expect(response).toEqual(recommendationData2);
+        expect(recommendationRepository.findAll).toHaveBeenCalledTimes(1);
+    });
+
+    it("Should throw a not found error when there are no recommendations", () => {
+        jest.spyOn(recommendationRepository, "findAll").mockImplementationOnce(
+            () => []
+        );
+
+        const promise = recommendationService.getRandom();
+        expect(promise).rejects.toEqual({ type: "not_found", message: "" });
+    });
+});
