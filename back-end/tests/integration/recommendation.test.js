@@ -67,9 +67,15 @@ describe("POST /recommendations/:id/upvote tests", () => {
         );
     });
 
-    it("Given an invalid id, should return 404", async () => {
+    it("Given an id that doesn't exist, should return 404", async () => {
         const response = await supertest(app).post("/recommendations/1/upvote");
         expect(response.statusCode).toBe(404);
+    });
+
+    it("Given an id that is not a number, should return 500", async () => {
+        const response = await supertest(app).post(`/recommendations/a/upvote`);
+
+        expect(response.statusCode).toEqual(500);
     });
 });
 
@@ -125,11 +131,17 @@ describe("POST /recommendations/:id/downvote tests", () => {
         expect(finalRecommendationInfo).toBeNull();
     });
 
-    it("Given an invalid id, should return 404", async () => {
+    it("Given an id that doesn't exist, should return 404", async () => {
         const response = await supertest(app).post(
             "/recommendations/1/downvote"
         );
         expect(response.statusCode).toBe(404);
+    });
+
+    it("Given an id that is not a number, should return 500", async () => {
+        const response = await supertest(app).post(`/recommendations/a/downvote`);
+
+        expect(response.statusCode).toEqual(500);
     });
 });
 
@@ -162,18 +174,47 @@ describe("GET /recommendations/top/:amount tests", () => {
 
         for (let i = 1; i <= 10; i++) {
             await recommendationsFactory.updateRecommendationScore(i);
-        };
+        }
 
         const response = await supertest(app).get("/recommendations/top/5");
 
         const top5 = await prisma.recommendation.findMany({
             take: 5,
             orderBy: {
-                score: "desc"
-            }
+                score: "desc",
+            },
         });
 
         expect(response.body.length).toEqual(5);
         expect(response.body).toEqual(top5);
     });
+});
+
+describe("GET /recommendations/:id tests", () => {
+    it("Given a valid id, should return the recommendation", async () => {
+        const recommendationData =
+            recommendationsFactory.createRecommendationData();
+
+        const objectKeys = ["id", "name", "youtubeLink", "score"];
+
+        await recommendationsFactory.insertRecommendation(recommendationData);
+
+        const response = await supertest(app).get("/recommendations/1");
+
+        expect(response.body.name).toBe(recommendationData.name);
+        expect(response.body.youtubeLink).toBe(recommendationData.youtubeLink);
+        expect(Object.keys(response.body)).toEqual(objectKeys);
+    });
+
+    it("Given an id that is not a number, should return 500", async () => {
+        const response = await supertest(app).get("/recommendations/a");
+
+        expect(response.statusCode).toEqual(500);
+    });
+
+    it("Given an id that doesn't exist, should return 404", async () => {
+        const response = await supertest(app).get("/recommendations/1");
+
+        expect(response.statusCode).toEqual(404);
+    })
 });
