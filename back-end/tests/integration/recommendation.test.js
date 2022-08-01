@@ -1,10 +1,10 @@
 import supertest from "supertest";
-import { prisma } from "../src/database.js";
-import app from "../src/app.js";
-import * as recommendationsFactory from "./factories/recommendationsFactory.js";
+import { prisma } from "../../src/database.js";
+import app from "../../src/app.js";
+import * as recommendationsFactory from "../factories/recommendationsFactory.js";
 
 beforeEach(async () => {
-    await prisma.$executeRaw`TRUNCATE TABLE recommendations`;
+    await prisma.$executeRaw`TRUNCATE TABLE recommendations RESTART IDENTITY`;
 });
 
 describe("POST /recommendations tests", () => {
@@ -40,7 +40,7 @@ describe("POST /recommendations tests", () => {
     });
 });
 
-describe("POST /recommendations/:id/upvote", () => {
+describe("POST /recommendations/:id/upvote tests", () => {
     it("Given a valid id, should return 200 and update the recommendation score", async () => {
         const recommendationData =
             recommendationsFactory.createRecommendationData();
@@ -73,7 +73,7 @@ describe("POST /recommendations/:id/upvote", () => {
     });
 });
 
-describe("POST /recommendations/:id/downvote", () => {
+describe("POST /recommendations/:id/downvote tests", () => {
     it("Given a valid id, should return 200 and update the recommendation score", async () => {
         const recommendationData =
             recommendationsFactory.createRecommendationData();
@@ -130,5 +130,16 @@ describe("POST /recommendations/:id/downvote", () => {
             "/recommendations/1/downvote"
         );
         expect(response.statusCode).toBe(404);
+    });
+});
+
+describe("GET /recommendations tests", () => {
+    it("Should return an array with the last 10 recommendations", async () => {
+        await recommendationsFactory.insertManyRecommendations(11);
+
+        const response = await supertest(app).get("/recommendations");
+
+        expect(response.body.length).toBe(10);
+        expect(response.body[0].id).toBe(11);
     });
 });
