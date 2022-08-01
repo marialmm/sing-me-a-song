@@ -41,3 +41,27 @@ describe("Create recommendation tests", () => {
         });
     });
 });
+
+describe("Upvote recommendation tests", () => {
+    it("Should update score", async () => {
+        jest.spyOn(recommendationRepository, "find").mockResolvedValueOnce({
+            id: 1,
+        });
+        jest.spyOn(
+            recommendationRepository,
+            "updateScore"
+        ).mockImplementation(() => {});
+
+        await recommendationService.upvote(1);
+
+        expect(recommendationRepository.updateScore).toHaveBeenCalledTimes(1);
+    });
+
+    it("Given a id that doesn't exist, should throw a not found error", async () => {
+        jest.spyOn(recommendationRepository, "find").mockResolvedValueOnce(null);
+
+        const promise = recommendationService.upvote(1);
+
+        expect(promise).rejects.toEqual({type: "not_found", message: ""})
+    })
+});
