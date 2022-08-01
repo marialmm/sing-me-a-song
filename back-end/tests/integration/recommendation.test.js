@@ -143,3 +143,15 @@ describe("GET /recommendations tests", () => {
         expect(response.body[0].id).toBe(11);
     });
 });
+
+describe("GET /recommendations/random", () => {
+    it("Should return a single recommendation", async () => {
+        await recommendationsFactory.insertManyRecommendations(3);
+
+        const objectKeys = ["id", "name", "youtubeLink", "score"];
+
+        const response = await supertest(app).get("/recommendations/random");
+
+        expect(Object.keys(response.body)).toEqual(objectKeys);
+    });
+});

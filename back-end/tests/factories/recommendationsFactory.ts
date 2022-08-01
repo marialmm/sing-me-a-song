@@ -3,7 +3,7 @@ import { prisma } from "../../src/database.js";
 
 export function createRecommendationData() {
     const recommendationData = {
-        name: faker.music.songName(),
+        name: faker.random.words(),
         youtubeLink: `www.youtube.com/${faker.random.alpha({ count: 10 })}`,
     };
 
