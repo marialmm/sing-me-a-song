@@ -171,6 +171,7 @@ describe("Get a random recommendation tests", () => {
     });
 
     it("Should throw a not found error when there are no recommendations", () => {
+        jest.spyOn(Math, "random").mockReturnValueOnce(0.6);
         jest.spyOn(recommendationRepository, "findAll").mockImplementationOnce(
             () => []
         );
