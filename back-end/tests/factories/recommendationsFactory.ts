@@ -41,3 +41,13 @@ export async function insertManyRecommendations(number: number) {
         data: recommendations,
     });
 }
+
+export async function updateRecommendationScore(id: number){
+    const score = Math.floor(Math.random() * 100);
+    await prisma.recommendation.update({
+        where: {id},
+        data: {
+            score
+        }
+    })
+}

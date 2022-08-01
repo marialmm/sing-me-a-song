@@ -144,7 +144,7 @@ describe("GET /recommendations tests", () => {
     });
 });
 
-describe("GET /recommendations/random", () => {
+describe("GET /recommendations/random tests", () => {
     it("Should return a single recommendation", async () => {
         await recommendationsFactory.insertManyRecommendations(3);
 
@@ -153,5 +153,27 @@ describe("GET /recommendations/random", () => {
         const response = await supertest(app).get("/recommendations/random");
 
         expect(Object.keys(response.body)).toEqual(objectKeys);
+    });
+});
+
+describe("GET /recommendations/top/:amount tests", () => {
+    it("Given a valid amount, should return the top {amount} of recommendations", async () => {
+        await recommendationsFactory.insertManyRecommendations(10);
+
+        for (let i = 1; i <= 10; i++) {
+            await recommendationsFactory.updateRecommendationScore(i);
+        };
+
+        const response = await supertest(app).get("/recommendations/top/5");
+
+        const top5 = await prisma.recommendation.findMany({
+            take: 5,
+            orderBy: {
+                score: "desc"
+            }
+        });
+
+        expect(response.body.length).toEqual(5);
+        expect(response.body).toEqual(top5);
     });
 });
