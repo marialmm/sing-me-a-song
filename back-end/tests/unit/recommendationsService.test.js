@@ -195,3 +195,20 @@ describe("Get recommendations tests", () => {
     });
 });
 
+describe("Get top amount recommendations tests", () => {
+    it("Should return a list of amount recommendations", async () => {
+        const recommendations = [];
+        const amount = 6;
+        for(let i = 0; i < amount; i++){
+            const recommendationData = recommendationsFactory.createRecommendationData();
+            recommendations.push(recommendationData);
+        };
+
+        jest.spyOn(recommendationRepository, "getAmountByScore").mockResolvedValueOnce(recommendations);
+
+        const response = await recommendationService.getTop(amount);
+        
+        expect(response).toEqual(recommendations);
+        expect(recommendationRepository.getAmountByScore).toHaveBeenCalledTimes(1);
+    })
+})
