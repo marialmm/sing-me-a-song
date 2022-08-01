@@ -13,11 +13,11 @@ describe("Create recommendation", () => {
         cy.visit("http://localhost:3000/");
         cy.wait("@getRecommendations");
 
-        cy.get("input[placeholder=Name]").type(
-            recommendationFactory.recommendationData.name
-        );
+        const recommendationData =
+            recommendationFactory.createRecommendationData();
+        cy.get("input[placeholder=Name]").type(recommendationData.name);
         cy.get("input[placeholder='https://youtu.be/...']").type(
-            recommendationFactory.recommendationData.youtubeLink
+            recommendationData.youtubeLink
         );
         cy.get("button").click();
         cy.wait("@postRecommendation");
@@ -25,7 +25,7 @@ describe("Create recommendation", () => {
 
         cy.get("article:first div:first").should(
             `contain.text`,
-            recommendationFactory.recommendationData.name
+            recommendationData.name
         );
     });
 });
@@ -77,5 +77,27 @@ describe("Downvote recommendation", () => {
         }
 
         cy.get("article").should("not.exist");
+    });
+});
+
+describe("Get top recommendations", () => {
+    it("Should show the top recommendations", () => {
+        cy.intercept("GET", "/recommendations").as("getRecommendations");
+        cy.intercept("POST", "/recommendations/1/upvote").as(
+            "upvoteRecommendation"
+        );
+        cy.intercept("GET", "/recommendations/top/10").as("topRecommendations");
+
+        for(let i = 0; i<10; i++) {
+            cy.createRecommendation();
+        }
+
+        cy.visit("http://localhost:3000");
+        cy.wait("@getRecommendations");
+        cy.get("article:first .upvote").click();
+        cy.get(".top").click();
+        cy.url().should("equal", "http://localhost:3000/top");
+        cy.wait("@topRecommendations");
+        cy.get("article:first .score").should("contain.text", 1);
     });
 });
